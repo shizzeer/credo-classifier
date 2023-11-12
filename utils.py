@@ -39,6 +39,23 @@ def load_dataset(dataset_main_dir, batch_size=32, image_size=(60,60),
 
   return (train_ds, validation_ds)
 
+def preprocess_image(image):
+  """
+    Image preprocessing. Each pixel value inside an image is processed in such
+    a way that it goes into interval [0, 1]. 
+
+    Arguments:
+      -- image - Input image
+
+    Returns:
+      -- preprocessed_img - Preprocessed image with pixel values set 
+        appropriately
+  """
+
+  preprocessed_img = tf.image.convert_image_dtype(image, tf.float32) / 255.
+
+  return preprocessed_img
+
   
 
 
