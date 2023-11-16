@@ -19,7 +19,7 @@ def load_dataset(dataset_main_dir, batch_size=32, image_size=(60,60),
 
   train_ds = tf.keras.utils.image_dataset_from_directory(
     directory=dataset_main_dir,
-    label_mode='categorical',
+    label_mode='int',
     batch_size=batch_size,
     image_size=image_size,
     validation_split=validation_split,
@@ -29,7 +29,7 @@ def load_dataset(dataset_main_dir, batch_size=32, image_size=(60,60),
 
   validation_ds = tf.keras.utils.image_dataset_from_directory(
     directory=dataset_main_dir,
-    label_mode='categorical',
+    label_mode='int',
     batch_size=batch_size,
     image_size=image_size,
     validation_split=validation_split,
@@ -39,13 +39,14 @@ def load_dataset(dataset_main_dir, batch_size=32, image_size=(60,60),
 
   return (train_ds, validation_ds)
 
-def preprocess_image(image):
+def preprocess_image(image, label):
   """
     Image preprocessing. Each pixel value inside an image is processed in such
     a way that it goes into interval [0, 1]. 
 
     Arguments:
       -- image - Input image
+      -- label - Label assigned to an image from dataset
 
     Returns:
       -- preprocessed_img - Preprocessed image with pixel values set 
@@ -54,7 +55,7 @@ def preprocess_image(image):
 
   preprocessed_img = tf.image.convert_image_dtype(image, tf.float32) / 255.
 
-  return preprocessed_img
+  return preprocessed_img, label
 
   
 
