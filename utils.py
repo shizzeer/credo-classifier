@@ -24,7 +24,7 @@ def load_dataset(dataset_main_dir, batch_size=32, image_size=(60,60),
     image_size=image_size,
     validation_split=validation_split,
     subset='training',
-    seed=0
+    seed=42
   )
 
   validation_ds = tf.keras.utils.image_dataset_from_directory(
@@ -34,7 +34,7 @@ def load_dataset(dataset_main_dir, batch_size=32, image_size=(60,60),
     image_size=image_size,
     validation_split=validation_split,
     subset='validation',
-    seed=0
+    seed=42
   )
 
   return (train_ds, validation_ds)
