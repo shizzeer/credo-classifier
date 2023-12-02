@@ -16,7 +16,6 @@ def load_dataset(dataset_main_dir, batch_size=32, image_size=(60,60),
       -- (train_ds, validation_ds) - Python tuple with training and validation
           Tensorflow based datasets.
   """
-
   train_ds = tf.keras.utils.image_dataset_from_directory(
     directory=dataset_main_dir,
     label_mode='int',
