@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras 
+from tensorflow.keras.layers import Dense
 
 def load_dataset(dataset_main_dir, batch_size=32, image_size=(60,60),
                 validation_split=0.2):
@@ -57,6 +58,28 @@ def preprocess_image(image, label):
   preprocessed_img = tf.image.convert_image_dtype(image, tf.float32) / 255.
 
   return preprocessed_img, label
+
+def get_mlp_layers(model):
+  """
+    Get layers of a Multi-Layer Perceptron from a model.
+
+    Arguments:
+      -- model - Tensorflow's sequential neural network model
+      
+    Returns:
+      -- mlp_layers - Array with Multi-Layer Perceptron layers taken from the
+                        model
+  """
+
+  mlp_start_idx = 0
+  for i, layer in enumerate(model.layers):
+    if isinstance(layer, Dense):
+      mlp_start_idx = i - 1 # with Flatten layer
+      break
+    
+  mlp_layers = model.layers[mlp_start_idx:]
+  return mlp_layers
+    
 
   
 
