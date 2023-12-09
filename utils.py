@@ -1,6 +1,8 @@
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras 
 from tensorflow.keras.layers import Dense
+from sklearn.model_selection import KFold
 
 def load_dataset(dataset_main_dir, batch_size=32, image_size=(60,60),
                 validation_split=0.2):
@@ -79,7 +81,93 @@ def get_mlp_layers(model):
     
   mlp_layers = model.layers[mlp_start_idx:]
   return mlp_layers
+
+def kfold(inputs, targets, Model, num_folds=5, num_epochs=1500,
+          early_stopping=False):
+  """
+    Performs k-fold cross validation to properly assess model performance.
+
+    Arguments:
+      -- inputs - dataset on which k-fold will be executed
+      -- targets - labels for inputs
+      -- Model - reference to a model's class. This model will be validated
+      -- num_folds - number of folds 
+      -- num_epochs - number of epochs for training a model
+      -- early_stopping - True if early stopping is enabled to prevent overfitting
+
+    Returns:
+      -- score - average model's accuracy
+      -- mean_loss - average model's loss
+  """
+  k_fold = KFold(n_splits=num_folds, shuffle=True)
+
+  accuracy_scores = []
+  losses = []
+
+  for fold, (train, val) in enumerate(k_fold.split(inputs, targets)):
+    print(f"Fold {fold + 1}/{num_folds}")
+
+    model = Model()
+
+    # Wyzerowanie wag modelu
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
+
+    #print('Training shape: ', inputs[train].shape)
+    #print('Validation shape: ', inputs[val].shape)
+
+    if early_stopping:
+      model.fit(inputs[train],
+                  targets[train],
+                  batch_size=80,
+                  epochs=num_epochs,
+                  validation_data=(inputs[val], targets[val]),
+                  verbose=0,
+                  callbacks=[model.early_stopping])
+    else:
+      model.fit(inputs[train],
+                  targets[train],
+                  batch_size=80,
+                  epochs=num_epochs,
+                  validation_data=(inputs[val], targets[val]),
+                  verbose=0)
+
+    loss, accuracy_score = model.evaluate(inputs[val], targets[val])
+    accuracy_scores.append(accuracy_score)
+    losses.append(loss)
     
+  score = np.mean(accuracy_scores)
+  mean_loss = np.mean(losses)
+
+  return score, mean_loss
+
+def convert_tf_ds_to_numpy(tf_ds):
+  """
+    Converts Tensorflow's dataset to two numpy arrays - one for samples, one for
+    labels.
+
+    Arguments:
+      -- tf_ds - dataset in a Tensorflow format
+
+    Returns:
+      -- samples - samples as numpy array
+      -- labels - labels as numpy array
+  """
+  samples = []
+  labels = []
+
+  # Pobranie każdego elementu z tfds w postaci tablicy numpy
+  for images, tf_labels in tf.data.Dataset.as_numpy_iterator(tf_ds):
+    # Rozłożenie każdego batcha na pojedyncze obrazy
+    samples.extend(images)
+    labels.extend(tf_labels)
+
+  # Zapisanie obrazów 3D jako wektory 1D
+  samples = np.array([img.flatten() for img in samples])
+  labels = np.array(labels)
+
+  return (samples, labels)
 
   
 
