@@ -4,6 +4,8 @@ from tensorflow import keras
 from tensorflow.keras.layers import Dense
 from sklearn.model_selection import KFold
 
+import time
+
 def load_dataset(dataset_main_dir, batch_size=32, image_size=(60,60),
                 validation_split=0.2):
   """
@@ -98,11 +100,13 @@ def kfold(inputs, targets, Model, num_folds=5, num_epochs=1500,
     Returns:
       -- score - average model's accuracy
       -- mean_loss - average model's loss
+      -- training_time - average training time of a model (in seconds)
   """
   k_fold = KFold(n_splits=num_folds, shuffle=True)
 
   accuracy_scores = []
   losses = []
+  training_times = []
 
   for fold, (train, val) in enumerate(k_fold.split(inputs, targets)):
     print(f"Fold {fold + 1}/{num_folds}")
@@ -114,9 +118,7 @@ def kfold(inputs, targets, Model, num_folds=5, num_epochs=1500,
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-    #print('Training shape: ', inputs[train].shape)
-    #print('Validation shape: ', inputs[val].shape)
-
+    start_time = time.time()
     if early_stopping:
       model.fit(inputs[train],
                   targets[train],
@@ -132,15 +134,18 @@ def kfold(inputs, targets, Model, num_folds=5, num_epochs=1500,
                   epochs=num_epochs,
                   validation_data=(inputs[val], targets[val]),
                   verbose=0)
+    end_time = time.time()
 
+    training_times.append(end_time - start_time)
     loss, accuracy_score = model.evaluate(inputs[val], targets[val])
     accuracy_scores.append(accuracy_score)
     losses.append(loss)
     
   score = np.mean(accuracy_scores)
   mean_loss = np.mean(losses)
+  training_time = np.mean(training_times)
 
-  return score, mean_loss
+  return score, mean_loss, training_time
 
 def convert_tf_ds_to_numpy(tf_ds):
   """
